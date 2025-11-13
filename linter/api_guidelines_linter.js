@@ -18,7 +18,90 @@ const GUIDELINE_VIOLATIONS = {
   error_format: /error\s*[:=]\s*"?\w+"?/g,
 };
 
+const RULES_INFO = {
+  url_naming: {
+    title: 'Verb-like segments in URL',
+    description:
+      'URLs should represent resources (nouns), not actions. Avoid using verbs like `get`, `set`, `update`, or `delete` in path segments.',
+    suggestion: 'Rename the path to use a resource and HTTP method; e.g. `GET /users` instead of `/getUser`.',
+    example: '`/users/{id}` instead of `/getUser/{id}`',
+  },
+  trailing_slash: {
+    title: 'Trailing slash in resource path',
+    description:
+      'Prefer consistent usage of trailing slashes. Typically APIs avoid trailing slashes for resource endpoints.',
+    suggestion: 'Remove the trailing slash or normalize it across the API.',
+    example: '`/users` instead of `/users/`',
+  },
+  versioning: {
+    title: 'Versioning at the end of the path',
+    description:
+      'API version identifiers should be part of the base path (e.g. `/v1`) and not used as a trailing segment on resource endpoints.',
+    suggestion: 'Move `v1` to the base path: e.g. `/v1/users`.',
+    example: '`/v1/users`',
+  },
+  resource_nesting: {
+    title: 'Deep resource nesting',
+    description:
+      'Avoid deeply nested resources; prefer flatter structures or an association resource when appropriate.',
+    suggestion: 'Consider using query parameters or separate endpoints for deeply nested data.',
+    example: '`/users/{id}/orders` instead of `/users/{id}/accounts/{aid}/orders/{oid}`',
+  },
+  mixed_case: {
+    title: 'Mixed or inconsistent casing',
+    description:
+      'URLs and identifiers should use consistent casing (kebab-case or snake_case). MixedCase is confusing and error-prone.',
+    suggestion: 'Use kebab-case (recommended) or snake_case consistently across endpoints.',
+    example: '`/user-profiles`',
+  },
+  http_method_in_url: {
+    title: 'HTTP method included in URL',
+    description:
+      "Don't encode the HTTP method into the URL. Use the correct HTTP verb (GET/POST/PUT/etc.) instead.",
+    suggestion: 'Remove method from URL and use HTTP verb: `POST /users` to create a user.',
+    example: '`POST /users` (not `/createUserPOST`)',
+  },
+  error_format: {
+    title: 'Inconsistent error key format',
+    description:
+      'Errors should follow a consistent structured format (e.g. JSON object with `code`, `message`, and optional `details`).',
+    suggestion: 'Return structured error objects and document the schema.',
+    example: '`{ "code": "USER_NOT_FOUND", "message": "User not found" }`',
+  },
+};
+
 const REPORT = {};
+
+// Files and directories to ignore while scanning
+const IGNORED_DIRS = new Set([
+  'node_modules',
+  '.git',
+  '.github',
+  '.vscode',
+  'dist',
+  'build',
+]);
+
+const IGNORED_FILES = new Set([
+  'package-lock.json',
+  'yarn.lock',
+  'pnpm-lock.yaml',
+  '.env',
+  '.env.local',
+  '.gitignore',
+  '.gitattributes',
+  '.eslintrc',
+  '.eslintrc.js',
+  '.eslintrc.json',
+  '.prettierrc',
+  '.prettierrc.json',
+  '.editorconfig',
+  'Dockerfile',
+  'docker-compose.yml',
+]);
+
+// file extensions we'll scan for (still keep language-agnostic list)
+const SCAN_FILE_EXTENSIONS = /\.(js|ts|py|java|go|rb|php|cs|yaml|yml|json)$/i;
 
 function scanFile(filepath) {
   const content = fs.readFileSync(filepath, 'utf8');
@@ -29,7 +112,7 @@ function scanFile(filepath) {
       const matches = line.match(pattern);
       if (matches && matches.length > 0) {
         matches.forEach(match => {
-          violations.push({ match, line: idx + 1 });
+          violations.push({ match, line: idx + 1, snippet: line.trim() });
         });
       }
     });
@@ -43,9 +126,19 @@ function scanFile(filepath) {
 function scanDirectory(directory) {
   fs.readdirSync(directory, { withFileTypes: true }).forEach(dirent => {
     const fullPath = path.join(directory, dirent.name);
+    // skip ignored directories
     if (dirent.isDirectory()) {
+      if (IGNORED_DIRS.has(dirent.name)) return;
+      // also skip hidden folders except those explicitly allowed
+      if (dirent.name.startsWith('.') && !['.github', '.vscode'].includes(dirent.name)) return;
       scanDirectory(fullPath);
-    } else if (dirent.isFile() && /\.(js|ts|py|java|go|rb|php|cs|yaml|yml|json)$/.test(dirent.name)) {
+    } else if (dirent.isFile()) {
+      // skip known config/lock files
+      if (IGNORED_FILES.has(dirent.name)) return;
+      // skip dotfiles (hidden config files)
+      if (dirent.name.startsWith('.')) return;
+      // only scan files with allowed extensions
+      if (!SCAN_FILE_EXTENSIONS.test(dirent.name)) return;
       scanFile(fullPath);
     }
   });
@@ -58,20 +151,29 @@ function printReport() {
     console.log('No guideline violations found.');
     return;
   }
+  let total = 0;
   for (const [rule, violations] of Object.entries(REPORT)) {
-    console.log(`\nRule: ${rule}`);
+    const info = RULES_INFO[rule] || {};
+    console.log(`\nRule: ${rule} - ${info.title || 'Guideline violation'}`);
+    if (info.description) console.log(`  Description: ${info.description}`);
+    if (info.suggestion) console.log(`  Suggestion: ${info.suggestion}`);
+    if (info.example) console.log(`  Example: ${info.example}`);
+
     violations.forEach(({ filepath, violations }) => {
-      console.log(`  File: ${filepath}`);
+      console.log(`\n  File: ${filepath}`);
       const unique = new Map();
-      violations.forEach(({ match, line }) => {
-        const key = `${match}@${line}`;
+      violations.forEach(({ match, line, snippet }) => {
+        const key = `${match}@${line}@${snippet}`;
         if (!unique.has(key)) {
           unique.set(key, true);
-          console.log(`    Violation: ${match} (line ${line})`);
+          total += 1;
+          console.log(`    • Line ${line}: ${snippet}`);
+          console.log(`      Matched: "${match}"`);
         }
       });
     });
   }
+  console.log(`\nTotal violations: ${total}`);
 }
 
 function main() {
