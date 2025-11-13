@@ -1,1055 +1,1522 @@
-# RESTful API Design Guidelines
+# Comprehensive Guidelines for RESTful API Design
 
-## 🎯 Purpose
-This document teaches how to design clean, consistent, and developer-friendly RESTful APIs based on industry best practices, OCTO Technology standards, and real-world experience from Web Giants.
+## 📋 Overview
 
-**Target Audience**: AI assistants, developers, and architects designing REST APIs  
-**Philosophy**: Balance REST purity with pragmatic usability
+This document provides comprehensive guidelines for designing RESTful APIs following industry best practices. These guidelines are based on REST principles (Roy Fielding), HTTP specifications, and the experience of major technology companies.
 
----
-
-## 🧭 Core Philosophy & Architecture
-
-### Primary Design Principles (Priority Order)
-
-1. **👥 Design for developers, NOT your database**
-   - Think about how clients will consume your API
-   - Optimize for developer experience (DX)
-   - Hide internal complexity
-
-2. **💡 Keep it Simple (KISS)**
-   - API must be self-explanatory without documentation
-   - Use intuitive, predictable patterns
-   - Minimize cognitive load
-
-3. **🎯 One way to do things**
-   - Never allow multiple approaches for same task
-   - Eliminates confusion and decision paralysis
-   - Easier to learn and maintain
-
-4. **🗣️ Use shared vocabulary**
-   - Standard, concrete terms only
-   - No internal jargon or business acronyms
-   - Terms everyone understands immediately
-
-5. **🚀 Prioritize main use cases first**
-   - 80/20 rule: optimize for common scenarios
-   - Handle edge cases and exceptions later
-   - Don't let rare cases complicate common ones
-
-6. **⚖️ Balance purity with pragmatism**
-   - Follow REST principles where sensible
-   - Deviate when it improves usability
-   - Document intentional deviations
-
-### Web Oriented Architecture (WOA)
-
-Build fast, scalable, and secure APIs based on:
-
-- ✅ **REST principles** (stateless, resource-oriented)
-- ✅ **HATEOAS** (hypermedia-driven discoverability)
-- ✅ **Stateless microservices** (decoupled architecture)
-- ✅ **Asynchronous patterns** (non-blocking operations)
-- ✅ **OAuth2** (authorization) + **OpenID Connect** (authentication)
-- ✅ **HTTPS everywhere** (mandatory security)
-
-### Success Criteria
-
-Your API is successful when it's:
-
-| Quality | Description |
-|---------|-------------|
-| **Intuitive** | Developers understand it without reading docs |
-| **Consistent** | Patterns repeat predictably throughout |
-| **Discoverable** | Clients can explore via hypermedia links |
-| **Secure** | Protected by default, not as afterthought |
-| **Fast** | Optimized responses, efficient pagination |
-| **Well-documented** | Clear examples, edge cases covered |
+**Objective**: Create intuitive, consistent, secure, and developer-oriented APIs.
 
 ---
 
-## 🌐 URL Structure & Naming
+## 🎯 Core Philosophy
+
+### 1. Design Principles
+
+#### Simplicity First (KISS - Keep It Simple, Stupid)
+- The API should be usable **without having to consult the documentation**
+- Self-descriptive and predictable
+- Use standard and concrete terms, avoid business jargon
+
+#### Client-Oriented
+- Design for **application developers**, not for your data structure
+- Prioritize main use cases before exceptions
+- Think mobile-first (bandwidth optimization)
+
+#### Absolute Consistency
+- **One single way** to accomplish each task
+- Uniform conventions across the entire API
+- Predictable behaviors
+
+#### WOA Architecture (Web Oriented Architecture)
+- Pure REST architecture with HATEOAS
+- Stateless microservices
+- OAuth2 for authorization
+- OpenID Connect for authentication
+- HTTPS mandatory
+- Asynchronous patterns for long-running operations
+
+---
+
+## 🏗️ URL Structure
 
 ### Resource Naming Rules
 
-| Rule | ✅ Correct | ❌ Incorrect | Why |
-|------|-----------|-------------|-----|
-| **Nouns, not verbs** | `GET /orders` | `GET /getAllOrders` | REST = resources, not RPC calls |
-| **Plural forms** | `/users`, `/users/007` | `/user/007` | Consistency for collections & instances |
-| **Spinal-case** | `/specific-orders` | `/specificOrders` | Some servers ignore case |
-| **No trailing slash** | `/orders` | `/orders/` | Cleaner, more consistent |
+#### ✅ Use NOUNS, NOT verbs
+REST is not SOAP-RPC. URLs represent resources, not actions.
 
-**Examples**:
-```http
-✅ GET /orders
-✅ GET /users
-✅ GET /products
-✅ POST /specific-orders
+```
+✅ CORRECT
+GET /orders
+GET /users
+POST /products
 
-❌ GET /getAllOrders
-❌ GET /user/007
-❌ GET /specificOrders
+❌ INCORRECT
+GET /getAllOrders
+POST /createUser
+GET /fetchProducts
 ```
 
-### Attribute & Parameter Naming
+#### ✅ Always use PLURAL
+Consistency for both collections and individual instances.
 
-**Choose one convention and stick to it:**
+```
+✅ CORRECT
+GET /users          (collection)
+GET /users/007      (instance)
+POST /orders
+DELETE /products/42
 
-| Convention | Example Query | Example JSON |
-|------------|---------------|--------------|
-| **snake_case** | `?id_user=007` | `{"id_user":"007"}` |
-| **camelCase** | `?idUser=007` | `{"idUser":"007"}` |
+❌ INCORRECT
+GET /user/007
+GET /users/007/order/1234
+```
 
-⚠️ **Never mix both** - pick one for entire API
+#### ✅ Use spinal-case (kebab-case)
+Some servers ignore URL case sensitivity.
 
-### URL Hierarchy (Resource Relationships)
+```
+✅ CORRECT
+POST /specific-orders
+GET /user-preferences
+PUT /payment-methods/123
 
-Reflect composition/aggregation through URL structure:
+❌ INCORRECT
+POST /specificOrders
+GET /userPreferences
+PUT /paymentMethods/123
+```
 
-```http
+#### ✅ URL Hierarchy
+Use hierarchy to express aggregation/composition relationships.
+
+```
+✅ CORRECT
 GET /orders/1234/products/1
-# "products belong to orders"
+GET /users/007/addresses/home
+GET /companies/acme/employees/42
 
-GET /users/007/orders
-# "orders belong to user 007"
-
-GET /companies/42/departments/5/employees
-# "employees belong to department 5 of company 42"
+Meaning: products belong to orders
 ```
 
-**Maximum nesting: 2 levels deep**
+### Attribute Naming Convention
 
-```http
-✅ /users/007/orders
-✅ /orders/1234/items
-
-❌ /users/007/orders/1234/items/5/reviews
-```
-
-### Versioning (Mandatory from Day 1)
-
-**Include version at top of URL path:**
-
-```http
-✅ GET /v1/orders
-✅ GET /v2/orders
-✅ POST /v1/users
-
-❌ GET /orders?version=1
-❌ GET /orders (no version)
-```
-
-**Guidelines**:
-- Version at highest scope
-- Use major versions only (v1, v2, not v1.2.3)
-- Support max **2 versions simultaneously**
-- Consider native app update cycles (can't force updates)
-
-**Alternative** (less common):
-```http
-Accept: application/vnd.api.v1+json
-```
-
-### Resource Granularity
-
-**Use medium-grained resources** (not fine, not coarse):
+Choose **snake_case** OR **camelCase** and remain consistent throughout the entire API.
 
 ```json
-GET /users/007
-
-✅ Medium-grained (good):
+// Option A: snake_case (recommended for JSON)
 {
-  "id": "007",
+  "id_user": "007",
   "first_name": "James",
-  "name": "Bond",
-  "address": {
-    "street": "Horsen Ferry Road",
-    "city": {"name": "London"}
-  }
+  "last_name": "Bond",
+  "created_at": "2025-01-15T10:30:00+00:00"
 }
 
-❌ Too fine-grained (bad):
-# Requires multiple calls
-GET /users/007
-GET /users/007/first-name
-GET /users/007/address
-GET /users/007/address/city
-
-❌ Too coarse-grained (bad):
-# Returns massive payload with everything
+// Option B: camelCase
 {
-  "id": "007",
-  "first_name": "James",
-  ...[50 more fields]...,
-  "orders": [...100 orders...],
-  "preferences": {...},
-  "activity_log": [...]
+  "idUser": "007",
+  "firstName": "James",
+  "lastName": "Bond",
+  "createdAt": "2025-01-15T10:30:00+00:00"
 }
 ```
 
-**Rule**: Maximum 2 nested levels in response
+**⚠️ Golden Rule**: Choose one style and NEVER deviate.
+
+### Versioning
+
+#### ✅ Versioning MANDATORY in URL
+- At the highest level of the URL
+- Only major versions (v1, v2, v3)
+- Support maximum **2 versions simultaneously**
+- Consider native application update cycles
+
+```
+✅ CORRECT
+GET /v1/orders
+POST /v2/users
+GET /v1/products
+
+❌ INCORRECT
+GET /orders?version=1
+GET /api/orders/v1
+```
+
+**Deprecation Strategy**:
+1. Announce deprecation 6-12 months in advance
+2. Include `Deprecation` and `Sunset` headers
+3. Maintain v1 while v2 is being adopted
+4. Remove v1 only when usage < 5%
 
 ---
 
-## 🧩 HTTP Methods (CRUD Operations)
+## 🔧 HTTP Methods (CRUD Operations)
 
-### Complete Method Matrix
+### Reference Table
 
-| HTTP Verb | Collection: `/orders` | Instance: `/orders/{id}` | Idempotent? | Safe? |
-|-----------|----------------------|--------------------------|-------------|-------|
-| **GET** | List orders (200) | Get single order (200) | ✅ | ✅ |
-| **POST** | Create order (201) | ❌ Not used | ❌ | ❌ |
-| **PUT** | ❌ Not used | Full replace (200) / Create with ID (201) | ✅ | ❌ |
-| **PATCH** | ❌ Not used | Partial update (200) | ❌ | ❌ |
-| **DELETE** | ❌ Not used | Delete order (204) | ✅ | ❌ |
-
-**Definitions**:
-- **Idempotent**: Same result when called multiple times
-- **Safe**: Read-only, no side effects
+| HTTP Method | Collection `/orders` | Instance `/orders/{id}` | Idempotent | Safe |
+|-------------|---------------------|------------------------|------------|------|
+| **GET** | List orders (200) | Retrieve ONE order (200) | ✅ | ✅ |
+| **POST** | Create an order (201) | ❌ Error 405 | ❌ | ❌ |
+| **PUT** | ❌ Error 405 | Replace completely (200) or Create with specific ID (201) | ✅ | ❌ |
+| **PATCH** | ❌ Error 405 | Partial update (200) | ❌ | ❌ |
+| **DELETE** | ❌ Error 405 | Delete order (204) | ✅ | ❌ |
 
 ### GET - Read Resources
 
+**Usage**: Retrieve resources (collection or instance)
+
 ```http
-# Read collection
-GET /orders HTTP/1.1
-Host: api.example.com
+# Collection
+GET /v1/orders HTTP/1.1
 Accept: application/json
 
-HTTP/1.1 200 OK
+→ 200 OK
 Content-Type: application/json
-
 [
-  {"id":"1234", "state":"paid", "total":42.50},
-  {"id":"5678", "state":"running", "total":99.99}
+  {"id": "1234", "state": "paid", "total": 125.50},
+  {"id": "5678", "state": "running", "total": 87.20}
 ]
+
+# Instance
+GET /v1/orders/1234 HTTP/1.1
+Accept: application/json
+
+→ 200 OK
+Content-Type: application/json
+{
+  "id": "1234",
+  "state": "paid",
+  "total": 125.50,
+  "items": [...]
+}
 ```
 
-```http
-# Read single instance
-GET /orders/1234 HTTP/1.1
-Host: api.example.com
+**Characteristics**:
+- ✅ Idempotent: multiple calls = same result
+- ✅ Safe: no data modification
+- ✅ Cacheable
 
-HTTP/1.1 200 OK
-Content-Type: application/json
+### POST - Create Resource
 
-{"id":"1234", "state":"paid", "total":42.50, "user_id":"007"}
-```
-
-**Key Points**:
-- No side effects (safe)
-- Can be cached
-- Idempotent (same result every time)
-
-### POST - Create Resource (Server Assigns ID)
+**Usage**: Create a new resource when ID is generated by the server
 
 ```http
-POST /orders HTTP/1.1
-Host: api.example.com
+POST /v1/orders HTTP/1.1
 Content-Type: application/json
+Authorization: Bearer <token>
 
-{"state":"running", "user_id":"007", "total":42.50}
+{
+  "state": "running",
+  "id_user": "007",
+  "items": [
+    {"product_id": "42", "quantity": 2}
+  ]
+}
 
-HTTP/1.1 201 Created
+→ 201 Created
 Location: https://api.example.com/v1/orders/1234
 Content-Type: application/json
-
-{"id":"1234", "state":"running", "user_id":"007", "total":42.50}
+{
+  "id": "1234",
+  "state": "running",
+  "id_user": "007",
+  "created_at": "2025-01-15T10:30:00+00:00"
+}
 ```
 
-**Key Points**:
-- Server generates ID
-- Returns `201 Created`
-- `Location` header contains new resource URI
-- NOT idempotent (creates new resource each time)
+**Rules**:
+- Return **201 Created** for success
+- Include **Location** header with URI of the new resource
+- Return created resource in body
+- ❌ Non-idempotent: multiple POSTs = multiple resources
 
-### PUT - Create with Client ID OR Full Replace
+### PUT - Complete Replacement or Creation with Client ID
+
+**Usage 1**: Completely replace an existing resource
 
 ```http
-# Create with client-specified ID
-PUT /orders/1234 HTTP/1.1
-Host: api.example.com
+PUT /v1/orders/1234 HTTP/1.1
 Content-Type: application/json
 
-{"id":"1234", "state":"running", "user_id":"007", "total":42.50}
+{
+  "state": "paid",
+  "id_user": "007",
+  "total": 125.50
+}
 
-HTTP/1.1 201 Created
-Location: https://api.example.com/v1/orders/1234
+→ 200 OK
 ```
+
+**Usage 2**: Create a resource with a client-provided ID
 
 ```http
-# Full replacement (ALL fields required)
-PUT /orders/1234 HTTP/1.1
-Host: api.example.com
+PUT /v1/orders/custom-id-abc HTTP/1.1
 Content-Type: application/json
 
-{"id":"1234", "state":"paid", "user_id":"007", "total":42.50}
+{
+  "state": "running",
+  "id_user": "007"
+}
 
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-{"id":"1234", "state":"paid", "user_id":"007", "total":42.50}
+→ 201 Created
+Location: https://api.example.com/v1/orders/custom-id-abc
 ```
 
-**Key Points**:
-- Idempotent (same result if called multiple times)
-- Requires ALL fields (full replacement)
-- Use for upsert pattern (create if not exists, replace if exists)
+**Rules**:
+- ✅ Idempotent: multiple calls = same final result
+- PUT replaces **ALL** attributes (not just those provided)
+- If attribute omitted → default value or null
 
 ### PATCH - Partial Update
 
-```http
-PATCH /orders/1234 HTTP/1.1
-Host: api.example.com
-Content-Type: application/json
-
-{"state":"paid"}
-
-HTTP/1.1 200 OK
-Content-Type: application/json
-
-{"id":"1234", "state":"paid", "user_id":"007", "total":42.50}
-```
-
-**Key Points**:
-- Only send changed fields
-- NOT idempotent (depends on current state)
-- More efficient than PUT for small changes
-
-### DELETE - Remove Resource
+**Usage**: Modify only certain attributes
 
 ```http
-DELETE /orders/1234 HTTP/1.1
-Host: api.example.com
+PATCH /v1/orders/1234 HTTP/1.1
+Content-Type: application/json
 
-HTTP/1.1 204 No Content
+{
+  "state": "paid"
+}
+
+→ 200 OK
+Content-Type: application/json
+{
+  "id": "1234",
+  "state": "paid",
+  "id_user": "007",
+  "total": 125.50
+}
 ```
 
-**Key Points**:
-- Returns `204 No Content` (success with no body)
-- Idempotent (deleting twice = same result)
-- Second DELETE may return `404 Not Found`
+**Rules**:
+- Modify **only** provided fields
+- Other fields remain unchanged
+- ❌ Generally non-idempotent (depends on implementation)
+- Consider JSON Patch (RFC 6902) for complex operations
+
+### DELETE - Delete Resource
+
+**Usage**: Delete a resource
+
+```http
+DELETE /v1/orders/1234 HTTP/1.1
+
+→ 204 No Content
+```
+
+**Rules**:
+- Return **204 No Content** (no body)
+- ✅ Idempotent: DELETE multiple times = same result
+- If resource already absent → 204 or 404 depending on philosophy
 
 ---
 
-## 🔢 HTTP Status Codes
-
-### Success Codes (2xx)
-
-| Code | Name | When to Use | Example Scenario |
-|------|------|-------------|------------------|
-| **200** | OK | General success (GET, PUT, PATCH) | Retrieved user data |
-| **201** | Created | Resource created (POST, PUT new) | New order created |
-| **202** | Accepted | Async processing started | Job queued for processing |
-| **204** | No Content | Success, no body to return (DELETE) | Order deleted successfully |
-| **206** | Partial Content | Paginated/range response | Page 2 of 50 |
-
-### Client Error Codes (4xx)
-
-| Code | Name | Meaning | When Client Can Fix |
-|------|------|---------|---------------------|
-| **400** | Bad Request | Malformed request, invalid params | ✅ Fix request format |
-| **401** | Unauthorized | No credentials or invalid token | ✅ Provide authentication |
-| **403** | Forbidden | Authenticated but insufficient rights | ❌ Need permission grant |
-| **404** | Not Found | Resource doesn't exist | ✅ Check resource ID/URL |
-| **405** | Method Not Allowed | HTTP method not supported | ✅ Use different method |
-| **406** | Not Acceptable | Can't satisfy Accept headers | ✅ Request different format |
-| **409** | Conflict | Request conflicts with current state | ✅ Resolve conflict |
-| **422** | Unprocessable Entity | Valid syntax but semantic errors | ✅ Fix business logic error |
-| **429** | Too Many Requests | Rate limit exceeded | ✅ Wait and retry |
-
-### Server Error Codes (5xx)
-
-| Code | Name | Meaning | Client Action |
-|------|------|---------|---------------|
-| **500** | Internal Server Error | Unexpected server problem | Retry later, contact support |
-| **502** | Bad Gateway | Upstream service failed | Retry later |
-| **503** | Service Unavailable | Temporary overload/maintenance | Retry with backoff |
-| **504** | Gateway Timeout | Upstream service timeout | Retry later |
-
-### Standardized Error Response Format
-
-**Always use consistent JSON structure:**
-
-```json
-{
-  "error": "error_code",
-  "error_description": "Human-readable explanation"
-}
-```
-
-**Real Examples**:
-
-```http
-GET /bookings?paid=true
-→ 400 Bad Request
-{
-  "error": "invalid_request",
-  "error_description": "There is no 'paid' property. Did you mean 'payment_status'?"
-}
-```
-
-```http
-GET /orders/123
-→ 401 Unauthorized
-{
-  "error": "no_credentials",
-  "error_description": "You must be authenticated. Include 'Authorization: Bearer <token>' header."
-}
-```
-
-```http
-GET /admin/users
-→ 403 Forbidden
-{
-  "error": "protected_resource",
-  "error_description": "You need admin role to access this resource."
-}
-```
-
-```http
-GET /hotels/999999
-→ 404 Not Found
-{
-  "error": "not_found",
-  "error_description": "The hotel '999999' does not exist."
-}
-```
-
-```http
-POST /orders
-Accept-Language: zh
-→ 406 Not Acceptable
-{
-  "error": "not_acceptable",
-  "error_description": "Available languages: en, fr, es"
-}
-```
-
----
-
-## 🔍 Query Parameters
+## 🔍 Query Parameters (Query String)
 
 ### Filtering
 
-Use `?` with query parameters to filter collections:
+Use `?` to filter collection resources.
 
 ```http
-GET /orders?state=paid&user_id=007
-GET /products?category=electronics&in_stock=true
-GET /users?role=admin&active=true
+GET /v1/orders?state=paid&id_user=007
+
+→ 200 OK
+[
+  {"id": "1234", "state": "paid", "id_user": "007"},
+  {"id": "5678", "state": "paid", "id_user": "007"}
+]
 ```
 
-**Alternative** (hierarchical):
+**Hierarchical alternative** (same resource, different URLs):
 ```http
-GET /users/007/orders?state=paid
-# Multiple URIs can reference same resources
+GET /v1/users/007/orders?state=paid
 ```
 
 ### Sorting
 
-**Default**: Ascending order  
-**Syntax**: 
-- `?sort=attr1,attr2` (ascending)
-- `?desc=attr1,attr2` (descending)
-- Mix both for complex sorting
+**Format**: `?sort=attribute1,attribute2&desc=attribute1`
 
 ```http
-# Sort by rating DESC, then reviews DESC, then name ASC
-GET /restaurants?sort=rating,reviews,name&desc=rating,reviews
+# Ascending sort by rating, then reviews, then name
+GET /v1/restaurants?sort=rating,reviews,name
 
-# Sort by price ascending
-GET /products?sort=price
+# Descending sort
+GET /v1/restaurants?sort=rating,name&desc=rating
 
-# Sort by created date descending
-GET /orders?sort=created_at&desc=created_at
+# Combination
+GET /v1/restaurants?sort=rating,reviews,name&desc=rating,reviews
 ```
+
+**Rules**:
+- Default: ascending order
+- `sort`: list of attributes for ascending sort
+- `desc`: list of attributes for descending sort
+- Priority order: left to right
 
 ### Pagination (MANDATORY)
 
-**Every collection endpoint MUST implement pagination**
+**⚠️ Critical Rule**: Every collection MUST have default pagination.
 
-#### Why Mandatory?
-- Prevents performance issues
-- Controls response size
-- Protects server resources
-- Better mobile experience
+**Format**: `?range=start-end` (0-based indices)
 
-#### Implementation
-
-**Request**:
 ```http
-GET /orders?range=48-55 HTTP/1.1
-Host: api.example.com
-```
+GET /v1/orders?range=0-24 HTTP/1.1
 
-**Response**:
-```http
-HTTP/1.1 206 Partial Content
-Content-Type: application/json
-Content-Range: 48-55/971
-Accept-Range: order 10
-Link: <https://api.example.com/v1/orders?range=0-7>; rel="first",
-      <https://api.example.com/v1/orders?range=40-47>; rel="prev",
-      <https://api.example.com/v1/orders?range=56-64>; rel="next",
-      <https://api.example.com/v1/orders?range=968-975>; rel="last"
+→ 206 Partial Content
+Content-Range: 0-24/971
+Accept-Range: order 25
+Link: <https://api.example.com/v1/orders?range=0-24>; rel="first",
+      <https://api.example.com/v1/orders?range=25-49>; rel="next",
+      <https://api.example.com/v1/orders?range=950-974>; rel="last"
 
 [
-  {"id":"1248", "state":"paid"},
-  {"id":"1249", "state":"running"},
+  { "id": "1", ... },
+  { "id": "2", ... },
   ...
 ]
 ```
 
 **Required Headers**:
-- `Content-Range`: Shows current position (48-55 of 971 total)
-- `Accept-Range`: Indicates pagination unit and default size
-- `Link`: Navigation links (first, prev, next, last)
+- `Content-Range`: `{start}-{end}/{total}`
+- `Accept-Range`: `{unit} {default_page_size}`
+- `Link`: Relations first, prev, next, last (RFC 5988)
 
-**Default Pagination**:
-```http
-GET /orders
-# Same as: GET /orders?range=0-25
-```
+**Status Codes**:
+- **206 Partial Content**: pagination active
+- **200 OK**: complete collection returned (rare)
 
-⚠️ **Warning**: Adding resources during pagination may cause items to appear on wrong pages
-
-**Alternative Pagination Styles**:
-```http
-# Offset-based (common)
-GET /orders?limit=25&offset=50
-
-# Page-based (less efficient)
-GET /orders?page=3&per_page=25
-
-# Cursor-based (best for real-time data)
-GET /orders?cursor=eyJpZCI6MTIzNH0&limit=25
-```
+**Recommended Configuration**:
+- Default size: 25-50 items
+- Maximum: 100-200 items
+- Return 400 Bad Request if range invalid
 
 ### Partial Responses (Field Selection)
 
-**Critical for mobile** - reduces bandwidth and parsing time:
+**Usage**: Allow client to select desired fields (crucial for mobile).
 
 ```http
-GET /users/007?fields=firstname,name,address(street) HTTP/1.1
+GET /v1/users/007?fields=first_name,last_name,address(street,city)
 
-HTTP/1.1 200 OK
-Content-Type: application/json
-
+→ 200 OK
 {
   "id": "007",
-  "firstname": "James",
-  "name": "Bond",
+  "first_name": "James",
+  "last_name": "Bond",
   "address": {
-    "street": "Horsen Ferry Road"
+    "street": "Horsen Ferry Road",
+    "city": "London"
   }
 }
 ```
 
+**Format**:
+- Top-level fields: `field1,field2`
+- Nested fields: `address(street,city)`
+- Combination: `first_name,address(street,city(name)),orders(id,total)`
+
 **Benefits**:
-- Reduces payload size
-- Faster response times
-- Lower bandwidth costs
-- Better mobile performance
-
-**Syntax Examples**:
-```http
-# Select specific fields
-GET /users/007?fields=id,name,email
-
-# Nested field selection
-GET /users/007?fields=name,address(street,city)
-
-# Multiple resources
-GET /orders?fields=id,total,user(name,email)
-```
+- Drastic bandwidth reduction
+- Improved mobile-side performance
+- Less client-side parsing
 
 ### Search
 
-#### Resource-Specific Search
+#### Resource-specific Search
+
 ```http
-GET /restaurants/search?type=thai
-GET /products/search?q=laptop&category=electronics
-GET /users/search?name=john&role=admin
+GET /v1/restaurants/search?type=thai&rating_min=4
+
+→ 200 OK
+[...]
 ```
 
-#### Global Search (Google-Style)
+#### Global Search ("Google way")
+
 ```http
-GET /search?q=running+paid
-GET /search?q=order+status:paid+user:007
+GET /v1/search?q=running+paid
+
+→ 200 OK
+{
+  "results": [
+    {"type": "order", "id": "1234", ...},
+    {"type": "user", "id": "007", ...}
+  ]
+}
 ```
 
 ### Reserved Keywords
 
-| Keyword | Purpose | Example | Response |
-|---------|---------|---------|----------|
-| `/first` | First element | `GET /orders/first` | `{"id":"1234", "state":"paid"}` |
-| `/last` | Last element | `GET /orders/last` | `{"id":"5678", "state":"running"}` |
-| `/count` | Collection size | `GET /orders/count` | `{"count": 971}` |
+These special endpoints should be implemented to facilitate usage.
 
-**Use Cases**:
+#### `/first` - First element
 ```http
-# Get most recent order
-GET /orders/last
+GET /v1/orders/first
 
-# Check if any orders exist
-GET /orders/count
+→ 200 OK
+{"id": "1234", "state": "paid"}
+```
 
-# Get first user
-GET /users/first
+#### `/last` - Last element
+```http
+GET /v1/orders/last
+
+→ 200 OK
+{"id": "9999", "state": "running"}
+```
+
+#### `/count` - Number of elements
+```http
+GET /v1/orders/count
+
+→ 200 OK
+{"count": 971}
+
+# With filter
+GET /v1/orders/count?state=paid
+
+→ 200 OK
+{"count": 456}
 ```
 
 ---
 
-## 🌍 Content Negotiation & Formats
+## 📊 HTTP Status Codes
 
-### Content Type Negotiation
+### Success Codes (2xx)
 
-**Use Accept header** (RESTful way), not URL extensions:
+| Code | Name | Usage |
+|------|-----|-------|
+| **200** | OK | General success (GET, PUT/PATCH update) |
+| **201** | Created | Resource created (POST, PUT with new ID) |
+| **202** | Accepted | Request accepted for asynchronous processing |
+| **204** | No Content | Success with no content to return (DELETE) |
+| **206** | Partial Content | Partial resource returned (pagination) |
+
+### Client Error Codes (4xx)
+
+#### 400 Bad Request - Invalid Request
 
 ```http
-Accept: application/json, text/plain
+GET /v1/bookings?paid=true
 
-✅ GET /orders
-❌ GET /orders.json
-```
+→ 400 Bad Request
+Content-Type: application/json
 
-**Multiple formats with priority**:
-```http
-Accept: application/json, application/xml;q=0.9, */*;q=0.8
-# Prefers JSON, accepts XML, accepts anything else
-```
-
-**Default format**: Always JSON
-
-### Date/Time/Timestamp Format
-
-**Use ISO 8601 standard** exclusively:
-
-```json
 {
-  "created_at": "1978-05-10T06:06:06+00:00",
-  "updated_at": "2025-01-15T14:30:00Z",
-  "birth_date": "1978-05-10"
+  "error": "invalid_request",
+  "error_description": "The property 'paid' does not exist. Did you mean 'state'?",
+  "valid_properties": ["state", "id_user", "date"]
 }
 ```
 
-**Formats**:
-- Full timestamp: `YYYY-MM-DDThh:mm:ss+00:00`
-- UTC timezone: `YYYY-MM-DDThh:mm:ssZ`
-- Date only: `YYYY-MM-DD`
+**When to use**:
+- Invalid or missing parameters
+- Malformed JSON
+- Business validation failed
+- Incorrect data type
 
-❌ **Never use**:
-- `05/10/1978` (ambiguous)
-- `1978-10-5` (inconsistent)
-- Unix timestamps alone (not human-readable)
-
-### Internationalization (i18n)
-
-**Use Accept-Language header**, not query params:
+#### 401 Unauthorized - Authentication Required
 
 ```http
-Accept-Language: fr-CA, fr-FR;q=0.9, en;q=0.8
+GET /v1/orders
 
-✅ Accept-Language: fr-CA
-❌ ?language=fr
-❌ ?lang=fr
+→ 401 Unauthorized
+WWW-Authenticate: Bearer realm="api"
+
+{
+  "error": "no_credentials",
+  "error_description": "Authentication is required. Please provide a valid access token."
+}
 ```
 
-**Response**:
+**When to use**:
+- No token provided
+- Expired token
+- Invalid token
+
+#### 403 Forbidden - Insufficient Permissions
+
 ```http
-HTTP/1.1 200 OK
-Content-Language: fr-CA
+DELETE /v1/users/admin
+
+→ 403 Forbidden
+
+{
+  "error": "insufficient_permissions",
+  "error_description": "You do not have permission to delete admin users.",
+  "required_role": "super_admin"
+}
 ```
 
-If language not available:
+**When to use**:
+- Authenticated user but insufficient rights
+- Action forbidden by business policy
+- Protected resource
+
+#### 404 Not Found - Resource Does Not Exist
+
 ```http
-HTTP/1.1 406 Not Acceptable
+GET /v1/hotels/999999
+
+→ 404 Not Found
+
+{
+  "error": "not_found",
+  "error_description": "The hotel with ID '999999' does not exist."
+}
+```
+
+**When to use**:
+- Requested resource does not exist
+- Endpoint does not exist
+
+#### 405 Method Not Allowed - Unsupported Method
+
+```http
+POST /v1/orders/1234
+
+→ 405 Method Not Allowed
+Allow: GET, PUT, PATCH, DELETE
+
+{
+  "error": "method_not_allowed",
+  "error_description": "POST is not supported on order instances. Use PUT to update or POST on /orders to create.",
+  "allowed_methods": ["GET", "PUT", "PATCH", "DELETE"]
+}
+```
+
+**When to use**:
+- HTTP method not implemented for this resource
+- Operation not permitted for this user
+
+#### 406 Not Acceptable - Content Negotiation Failed
+
+```http
+GET /v1/hotels
+Accept: application/xml
+Accept-Language: zh
+
+→ 406 Not Acceptable
 
 {
   "error": "not_acceptable",
-  "error_description": "Available languages: en, fr, es"
+  "error_description": "Cannot provide content in requested format and language.",
+  "available_content_types": ["application/json"],
+  "available_languages": ["en", "fr", "es"]
 }
 ```
 
-### Cross-Origin Requests (CORS)
+**When to use**:
+- Requested format not available
+- Requested language not supported
 
-**Required for browser-based applications**:
-
-```http
-# Preflight request
-OPTIONS /orders HTTP/1.1
-Origin: https://example.com
-Access-Control-Request-Method: POST
-
-# Response
-HTTP/1.1 204 No Content
-Access-Control-Allow-Origin: https://example.com
-Access-Control-Allow-Methods: GET, POST, PUT, DELETE
-Access-Control-Allow-Headers: Content-Type, Authorization
-Access-Control-Max-Age: 86400
-```
-
-**Actual request**:
-```http
-POST /orders HTTP/1.1
-Origin: https://example.com
-
-HTTP/1.1 201 Created
-Access-Control-Allow-Origin: https://example.com
-```
-
-### JSONP (Legacy Support Only)
-
-**For Internet Explorer 7/8/9** - avoid if possible:
+#### 409 Conflict - State Conflict
 
 ```http
-# Standard REST → JSONP equivalent
-POST /orders        → GET /orders.jsonp?method=POST&callback=handleOrder
-GET /orders         → GET /orders.jsonp?callback=handleOrders
-GET /orders/1234    → GET /orders/1234.jsonp?callback=handleOrder
-PUT /orders/1234    → GET /orders/1234.jsonp?method=PUT&callback=handleOrder
+DELETE /v1/orders/1234
+
+→ 409 Conflict
+
+{
+  "error": "conflict",
+  "error_description": "Cannot delete order in 'paid' state. Cancel it first.",
+  "current_state": "paid"
+}
 ```
 
-⚠️ **JSONP Limitations**:
-- All requests forced to GET
-- Cannot use Accept header
-- Cannot send request body
-- **Security risk**: Web crawlers can trigger actions
+**When to use**:
+- Conflict with current resource state
+- Version conflict (optimistic locking)
 
-**Required Security**:
-- Must require OAuth2 `access_token`
-- Must require OAuth2 `client_id`
-- Prevents accidental data modification
+#### 429 Too Many Requests - Rate Limiting
+
+```http
+GET /v1/orders
+
+→ 429 Too Many Requests
+Retry-After: 60
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1642248600
+
+{
+  "error": "rate_limit_exceeded",
+  "error_description": "You have exceeded the rate limit of 100 requests per hour.",
+  "retry_after": 60
+}
+```
+
+### Server Error Codes (5xx)
+
+#### 500 Internal Server Error
+
+```http
+→ 500 Internal Server Error
+
+{
+  "error": "server_error",
+  "error_description": "An unexpected error occurred. Our team has been notified.",
+  "incident_id": "inc-2025-01-15-abc123"
+}
+```
+
+**Rules**:
+- NEVER expose technical details (stack trace, SQL)
+- Log complete error server-side
+- Provide incident ID for support
+
+#### 503 Service Unavailable - Service Temporarily Unavailable
+
+```http
+→ 503 Service Unavailable
+Retry-After: 120
+
+{
+  "error": "service_unavailable",
+  "error_description": "The service is temporarily unavailable due to maintenance.",
+  "retry_after": 120
+}
+```
+
+### Standardized Error Format
+
+**All error codes (4xx, 5xx) must return structured JSON**:
+
+```json
+{
+  "error": "error_code",
+  "error_description": "Human-readable description in English",
+  "error_description_i18n": "Translated description according to Accept-Language",
+  "details": {
+    "field": "value"
+  },
+  "documentation_url": "https://developers.example.com/errors/error_code",
+  "request_id": "req-abc123"
+}
+```
 
 ---
 
 ## 🔐 Security
 
-### Non-Negotiable Requirements
+### HTTPS Mandatory
 
-| Requirement | Why Mandatory |
-|-------------|---------------|
-| **HTTPS everywhere** | Prevents man-in-the-middle attacks, encrypts tokens |
-| **OAuth2 for authorization** | Industry standard, covers 99% of use cases |
-| **OpenID Connect for authentication** | Built on OAuth2, proven at scale |
-| **Never custom auth** | You will miss edge cases and vulnerabilities |
+**⚠️ Absolute Rule**: Every API MUST use HTTPS for ALL requests.
 
-### OAuth2 Benefits
+```
+✅ CORRECT
+https://api.example.com/v1/orders
 
-✅ Handles all authorization scenarios:
-- User-to-service
-- Service-to-service
-- Mobile apps
-- SPAs
-- Third-party integrations
-
-✅ Proven at scale by:
-- Google
-- Facebook
-- GitHub
-- Microsoft
-- Twitter
-
-✅ Extensive ecosystem:
-- Libraries for all languages
-- Well-understood by developers
-- Extensive documentation
-
-### Security Headers
-
-**Include in every response**:
-```http
-Strict-Transport-Security: max-age=31536000; includeSubDomains
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-XSS-Protection: 1; mode=block
-Content-Security-Policy: default-src 'self'
+❌ INCORRECT
+http://api.example.com/v1/orders
 ```
 
-### Authentication Flow Example
+**Configuration**:
+- TLS 1.2 minimum (TLS 1.3 recommended)
+- Valid certificates
+- HSTS (HTTP Strict Transport Security) enabled
+- Automatic HTTP → HTTPS redirect
+
+### OAuth 2.0 - Authorization
+
+**Recommended standard** for 99% of use cases.
+
+#### Authorization Flow
+
+**Authorization Code Flow** (web/mobile applications):
+```
+1. Client → Authorization Server: request code
+2. User authentication + consent
+3. Authorization Server → Client: authorization code
+4. Client → Authorization Server: exchange code for access_token
+5. Client → API: requests with access_token
+```
+
+**Client Credentials Flow** (machine-to-machine):
+```
+1. Client → Authorization Server: client_id + client_secret
+2. Authorization Server → Client: access_token
+3. Client → API: requests with access_token
+```
+
+#### Token Format
 
 ```http
-# 1. Get access token
-POST /oauth2/token HTTP/1.1
-Host: oauth2.example.com
-Content-Type: application/x-www-form-urlencoded
-
-grant_type=client_credentials&
-client_id=YOUR_CLIENT_ID&
-client_secret=YOUR_CLIENT_SECRET
-
-HTTP/1.1 200 OK
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "Bearer",
-  "expires_in": 3600
-}
-
-# 2. Use token in API requests
 GET /v1/orders HTTP/1.1
-Host: api.example.com
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-HTTP/1.1 200 OK
-[...]
 ```
+
+**Rules**:
+- `Bearer` prefix mandatory
+- Token in `Authorization` header
+- ❌ NEVER in URL or query string
+- Limited lifetime (1h recommended)
+- Refresh tokens for renewal
+
+### OpenID Connect - Authentication
+
+**Extension of OAuth 2.0** for user authentication.
+
+**ID Token (JWT)**:
+```json
+{
+  "iss": "https://oauth2.example.com",
+  "sub": "007",
+  "aud": "client_id_123",
+  "exp": 1642248600,
+  "iat": 1642245000,
+  "name": "James Bond",
+  "email": "james.bond@example.com"
+}
+```
+
+### Rate Limiting
+
+**Headers to include**:
+```http
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 75
+X-RateLimit-Reset: 1642248600
+```
+
+**Recommended Strategy**:
+- Per authenticated user: 1000 req/hour
+- Per anonymous IP: 100 req/hour
+- Sensitive endpoints: stricter limits
+
+### Additional Best Practices
+
+1. **CORS**: Configure properly for browser applications
+2. **Input Validation**: Validate and sanitize all inputs
+3. **SQL Injection**: Use parameterized queries
+4. **XSS Protection**: Escape outputs
+5. **CSRF Protection**: CSRF tokens for stateful APIs
+6. **API Keys**: For client identification (not for user authentication)
 
 ---
 
-## 🔗 HATEOAS (Hypermedia)
+## 🌍 Content Negotiation
 
-### Purpose & Philosophy
+### Content Format (Content Type)
 
-**HATEOAS** = Hypermedia as the Engine of Application State
-
-**Goal**: Make API completely discoverable - clients navigate by following links
-
-### Implementation with RFC5988
-
-Return possible actions in **Link header**:
+**`Accept` Header**: Client specifies accepted formats.
 
 ```http
-GET /users/007 HTTP/1.1
-Host: api.example.com
-Authorization: Bearer xxx
+GET /v1/orders HTTP/1.1
+Accept: application/json, text/plain;q=0.8
 
-HTTP/1.1 200 OK
+→ 200 OK
 Content-Type: application/json
+```
+
+**Supported Formats**:
+- `application/json` (default, recommended)
+- `application/xml` (optional)
+- `text/csv` (for exports)
+
+**Rules**:
+- JSON by default if header absent
+- Return 406 if format unavailable
+- ❌ Avoid extensions in URL (`/orders.json`)
+
+### Internationalization (i18n)
+
+#### Dates and Times - ISO 8601
+
+**Mandatory Format**: `YYYY-MM-DDThh:mm:ss±hh:mm`
+
+```json
+{
+  "created_at": "2025-01-15T10:30:00+00:00",
+  "updated_at": "2025-01-15T14:45:30+01:00",
+  "birth_date": "1990-05-20"
+}
+```
+
+**Accepted Formats**:
+- Date + time + timezone: `2025-01-15T10:30:00+00:00`
+- Date + time UTC: `2025-01-15T10:30:00Z`
+- Date only: `2025-01-15`
+
+#### Language - Accept-Language
+
+```http
+GET /v1/products HTTP/1.1
+Accept-Language: fr-CA, fr-FR;q=0.9, en;q=0.8
+
+→ 200 OK
+Content-Language: fr-CA
+```
+
+**Rules**:
+- Use `Accept-Language` header
+- ❌ Avoid query parameters (`?lang=fr`)
+- Support minimum English (default language)
+- Return `Content-Language` header
+
+#### Currencies and Amounts
+
+```json
+{
+  "total": 125.50,
+  "currency": "EUR",
+  "formatted_total": "125,50 €"
+}
+```
+
+**Format**:
+- Amount as decimal number
+- ISO 4217 currency code (3 letters)
+- Optional formatted version according to locale
+
+---
+
+## 🔗 HATEOAS (Hypermedia as the Engine of Application State)
+
+### Principle
+
+The API should provide **hypermedia links** enabling complete API discovery.
+
+### Link Header (RFC 5988)
+
+```http
+GET /v1/users/007 HTTP/1.1
+
+→ 200 OK
 Link: <https://api.example.com/v1/users/007>; rel="self"; method="GET",
-      <https://api.example.com/v1/users/007>; rel="edit"; method="PUT",
+      <https://api.example.com/v1/users/007>; rel="update"; method="PUT",
       <https://api.example.com/v1/users/007>; rel="delete"; method="DELETE",
       <https://api.example.com/v1/users/007/orders>; rel="orders"; method="GET",
       <https://api.example.com/v1/users/007/addresses>; rel="addresses"; method="GET"
 
 {
   "id": "007",
-  "firstname": "James",
-  "name": "Bond",
-  "email": "james.bond@mi6.gov.uk"
+  "first_name": "James",
+  "last_name": "Bond"
 }
 ```
 
-### Link Relation Types
+### Links in Body (HAL - Hypertext Application Language)
+
+```json
+{
+  "id": "007",
+  "first_name": "James",
+  "last_name": "Bond",
+  "_links": {
+    "self": {
+      "href": "https://api.example.com/v1/users/007"
+    },
+    "orders": {
+      "href": "https://api.example.com/v1/users/007/orders"
+    },
+    "addresses": {
+      "href": "https://api.example.com/v1/users/007/addresses"
+    }
+  }
+}
+```
+
+### Standard Relations
 
 | Relation | Meaning |
 |----------|---------|
-| `self` | Current resource |
-| `edit` | URL to update resource |
-| `delete` | URL to delete resource |
-| `next` | Next page in collection |
+| `self` | The resource itself |
+| `first` | First element of a collection |
+| `last` | Last element of a collection |
+| `next` | Next page |
 | `prev` | Previous page |
-| `first` | First page |
-| `last` | Last page |
-| `related` | Related resource |
+| `edit` | Endpoint to modify |
+| `delete` | Endpoint to delete |
 
-### Pragmatic Reality
+**⚠️ Practical Reality**: Most developers will read documentation and copy/paste rather than follow links. Implement HATEOAS for discoverability, but maintain clear documentation.
 
-**Most developers will**:
-- ❌ Not use hypermedia links
-- ✅ Read documentation
-- ✅ Hardcode URLs
-- ✅ Copy/paste examples
+---
 
-**But still provide links because**:
-- Future-proofs API
-- Enables API exploration tools
-- Supports automated clients
-- Makes API truly RESTful
-- Costs little to implement
+## 🌐 CORS and Cross-Origin Compatibility
 
-### State Machine via Links
+### CORS Standard
 
-Links show what actions are possible from current state:
+**Headers required for SPAs**:
 
 ```http
-# Order in "pending" state
-GET /orders/1234
+# Preflight Request (OPTIONS)
+OPTIONS /v1/orders HTTP/1.1
+Origin: https://app.example.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: Content-Type, Authorization
 
-Link: <.../orders/1234>; rel="self",
-      <.../orders/1234>; rel="cancel"; method="DELETE",
-      <.../orders/1234/pay>; rel="payment"; method="POST"
+→ 200 OK
+Access-Control-Allow-Origin: https://app.example.com
+Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE
+Access-Control-Allow-Headers: Content-Type, Authorization
+Access-Control-Max-Age: 86400
 
-# After payment - different actions available
-GET /orders/1234
+# Actual Request
+POST /v1/orders HTTP/1.1
+Origin: https://app.example.com
 
-Link: <.../orders/1234>; rel="self",
-      <.../orders/1234/ship>; rel="shipment"; method="POST",
-      <.../orders/1234/refund>; rel="refund"; method="POST"
+→ 201 Created
+Access-Control-Allow-Origin: https://app.example.com
+```
+
+**Recommended Configuration**:
+- Whitelist of allowed origins
+- Credentials allowed if necessary: `Access-Control-Allow-Credentials: true`
+- Max-Age to cache preflight
+
+### JSONP (Legacy Support)
+
+**⚠️ Only for Internet Explorer 7/8/9**
+
+```http
+GET /v1/orders.jsonp?callback=handleOrders&access_token=...
+
+→ 200 OK
+Content-Type: application/javascript
+
+handleOrders([
+  {"id": "1234", "state": "paid"},
+  {"id": "5678", "state": "running"}
+]);
+```
+
+**Critical Limitations**:
+- ❌ Only GET (no POST/PUT/DELETE)
+- ❌ No custom headers
+- ❌ Security risk if poorly implemented
+- ❌ Vulnerable to web crawlers
+
+**If implemented**:
+- Require `access_token` + `client_id`
+- Validate callback name (alphanumeric only)
+- Strict rate limiting
+
+---
+
+## 🎯 Resource Granularity
+
+### Medium Level (Recommended)
+
+Avoid resources that are too fine-grained or too coarse-grained.
+
+**✅ CORRECT - Medium-grained**:
+```json
+GET /v1/users/007
+
+{
+  "id": "007",
+  "first_name": "James",
+  "last_name": "Bond",
+  "email": "james.bond@example.com",
+  "address": {
+    "street": "Horsen Ferry Road",
+    "city": {
+      "name": "London",
+      "country": "UK"
+    }
+  },
+  "orders_count": 42
+}
+```
+
+**❌ INCORRECT - Too fine-grained**:
+```
+GET /v1/users/007/first-name
+GET /v1/users/007/last-name
+GET /v1/users/007/address/street
+GET /v1/users/007/address/city/name
+```
+
+**❌ INCORRECT - Too coarse-grained**:
+```json
+GET /v1/users/007
+
+{
+  "user": {...},
+  "all_orders": [{...}, {...}, ...],
+  "all_addresses": [{...}, {...}],
+  "payment_methods": [{...}, {...}],
+  "preferences": {...},
+  "activity_log": [{...}, {...}, ...]
+}
+```
+
+### 2-Level Maximum Rule
+
+Limit resource nesting to **2 levels maximum** in URLs.
+
+```
+✅ CORRECT
+/orders/1234/products/5
+
+❌ INCORRECT
+/users/007/orders/1234/products/5/reviews/9
+```
+
+**Solution**: Use top-level resources:
+```
+GET /reviews/9
+GET /products/5
 ```
 
 ---
 
-## ⚡ Non-Resource Scenarios (Operations)
+## 🚀 Non-Resource Scenarios
 
-### When Resources Don't Fit
+### When to Use Verbs
 
-Sometimes you need **operations** instead of resources:
+In rare cases, the operation is not a resource but an **action** or **service**.
 
+**Legitimate Examples**:
+
+#### Email Sending
 ```http
-POST /emails/42/send
-POST /calculator/sum
-Body: [1, 2, 3, 5, 8, 13, 21]
+POST /v1/emails/42/send
 
-POST /convert?from=EUR&to=USD&amount=42
-POST /orders/1234/cancel
-POST /users/007/reset-password
+→ 202 Accepted
+{
+  "status": "queued",
+  "job_id": "job-abc123"
+}
 ```
 
-### Guidelines for Operations
-
-1. **✅ Always try RESTful approach first**
-2. **✅ Use POST method** for operations
-3. **✅ Put verb at end of URI**
-4. **✅ Document why resource model doesn't fit**
-
-### RESTful Alternatives (Prefer These)
-
+#### Calculator
 ```http
-# Instead of: POST /send-email/42
-✅ Better: POST /emails/42/deliveries
+POST /v1/calculator/sum
+Content-Type: application/json
 
-# Instead of: POST /activate-user/123
-✅ Better: PATCH /users/123
-Body: {"status": "active"}
+[1, 2, 3, 5, 8, 13, 21]
 
-# Instead of: POST /approve-order/1234
-✅ Better: PATCH /orders/1234
-Body: {"approval_status": "approved"}
-
-# Instead of: POST /cancel-subscription/567
-✅ Better: DELETE /subscriptions/567
+→ 200 OK
+{
+  "result": 53
+}
 ```
 
-### When Operations Are Justified
-
-✅ **Complex calculations**:
+#### Currency Conversion
 ```http
-POST /calculator/sum
-POST /calculator/compound-interest
+POST /v1/convert
+Content-Type: application/json
+
+{
+  "from": "EUR",
+  "to": "USD",
+  "amount": 42
+}
+
+→ 200 OK
+{
+  "from": "EUR",
+  "to": "USD",
+  "amount": 42,
+  "result": 45.78,
+  "rate": 1.09
+}
 ```
 
-✅ **External integrations**:
+**Or via query params for GET**:
 ```http
-POST /payments/process
-POST /emails/send-batch
+GET /v1/convert?from=EUR&to=USD&amount=42
 ```
 
-✅ **Workflow actions**:
+### Golden Rule
+
+**⚠️ Always seek RESTful modeling first.**
+
+Example: instead of `POST /emails/42/send`, consider:
 ```http
-POST /orders/1234/ship
-POST /documents/456/publish
+# Model sending as a resource
+POST /v1/email-sends
+{
+  "email_id": "42",
+  "scheduled_at": "2025-01-15T14:00:00Z"
+}
 ```
 
 ---
 
-## 🏗️ API Infrastructure
+## 🏢 API Domain Structure
 
-### Domain Structure
+### Subdomain Organization
 
-**Separate concerns with subdomains**:
+**Recommended configuration for production**:
 
-| Subdomain | Purpose | Example | Audience |
-|-----------|---------|---------|----------|
-| **api.** | Production API | `https://api.company.com` | Production apps |
-| **api.sandbox.** | Test/Dev API | `https://api.sandbox.company.com` | Development/testing |
-| **developers.** | Developer portal | `https://developers.company.com` | API consumers |
-| **oauth2.** | Auth production | `https://oauth2.company.com` | Auth requests |
-| **oauth2.sandbox.** | Auth testing | `https://oauth2.sandbox.company.com` | Auth testing |
+| Subdomain | Usage | Example |
+|-----------|-------|---------|
+| `api.` | Production API | `https://api.company.com` |
+| `api.sandbox.` | Test/Development API | `https://api.sandbox.company.com` |
+| `developers.` | Developer Portal | `https://developers.company.com` |
+| `oauth2.` | Production OAuth Server | `https://oauth2.company.com` |
+| `oauth2.sandbox.` | Test OAuth Server | `https://oauth2.sandbox.company.com` |
 
-### Benefits of Separation
+### Benefits
 
-✅ Clear environment distinction  
-✅ Separate rate limits  
-✅ Different security policies  
-✅ Independent scaling  
-✅ Isolated failures  
+- **Clear separation** between environments
+- **Security**: data isolation
+- **Flexibility**: independent deployment
+- **Clarity**: developers know where to go
+
+### Alternatives
+
+**Path-based** (less recommended):
+```
+https://company.com/api/v1/
+https://company.com/sandbox/api/v1/
+```
 
 ---
 
-## 📚 Documentation Best Practices
+## 📚 Documentation
 
-### Use cURL Examples
+### cURL Examples
 
-**Why cURL?**
-- ✅ Universal tool (available everywhere)
-- ✅ Copy/paste ready
-- ✅ Shows all details (headers, body, auth)
-- ✅ Easy to convert to any language
+**Always provide** copy/pasteable cURL examples.
 
-**Example**:
 ```bash
-curl -X POST \
+# Create an order
+curl -X POST https://api.example.com/v1/orders \
   -H "Accept: application/json" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer at-80003004-19a8-46a2-908e-33d4057128e7" \
-  -d '{"state":"running", "user_id":"007"}' \
-  https://api.company.com/v1/orders?client_id=API_KEY_003
+  -d '{
+    "id_user": "007",
+    "state": "running",
+    "items": [
+      {"product_id": "42", "quantity": 2}
+    ]
+  }' \
+  --client-id API_KEY_003
+
+# Retrieve with pagination
+curl -X GET "https://api.example.com/v1/orders?range=0-24&state=paid" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <your_token>"
+
+# Partial update
+curl -X PATCH https://api.example.com/v1/orders/1234 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <your_token>" \
+  -d '{"state": "paid"}'
+
+# Delete
+curl -X DELETE https://api.example.com/v1/orders/1234 \
+  -H "Authorization: Bearer <your_token>"
 ```
 
-### Documentation Must Include
+### OpenAPI Specification (Swagger)
 
-1. **Clear endpoint description**
-   - What it does
-   - When to use it
-   - Authentication required?
+**Use OpenAPI 3.x** to formally document the API.
 
-2. **Request examples**
-   - Headers
-   - Body (if applicable)
-   - Query parameters
+```yaml
+openapi: 3.0.0
+info:
+  title: Example API
+  version: 1.0.0
+  description: RESTful API following best practices
 
-3. **Response examples**
-   - Success case
-   - Common error cases
-   - All possible status codes
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+  - url: https://api.sandbox.example.com/v1
+    description: Sandbox
 
-4. **Rate limits**
-   - Requests per minute/hour
-   - Headers to check limits
+paths:
+  /orders:
+    get:
+      summary: List all orders
+      parameters:
+        - name: range
+          in: query
+          schema:
+            type: string
+            default: "0-24"
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [running, paid, cancelled]
+      responses:
+        '206':
+          description: Partial content
+          headers:
+            Content-Range:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+```
 
-5. **Pagination details**
-   - Default page size
-   - Maximum page size
-   - How to navigate
+### Essential Documentation Elements
 
-6. **Field descriptions**
-   - Type (string, number, boolean, array, object)
-   - Required vs optional
-   - Validation rules
-   - Example values
+1. **Quickstart Guide**: Get a token and make the first call in 5 minutes
+2. **Authentication**: How to obtain and use tokens
+3. **Complete Examples**: For each endpoint, with request and response
+4. **Error Codes**: Exhaustive list with examples
+5. **Rate Limits**: Limits and headers
+6. **Pagination**: How to navigate collections
+7. **Webhooks**: If applicable
+8. **SDKs**: Official libraries if available
+9. **Changelog**: Version history
+10. **Support**: How to get help
 
 ---
 
-## ✅ Pre-Launch Checklist
+## ✅ API Design Checklist
 
-### URL & Structure
-- [ ] URLs use **nouns** (plural, spinal-case)
-- [ ] **Versioning** in URL path (`/v1/`, `/v2/`)
-- [ ] **Hierarchy** reflects relationships (max 2 levels)
-- [ ] **Consistent naming** (chose snake_case OR camelCase)
-- [ ] No trailing slashes
+Before deploying your API, verify:
 
-### HTTP Standards
-- [ ] **HTTP methods** follow CRUD semantics correctly
-- [ ] **Status codes** used appropriately
-- [ ] **Headers** follow HTTP specifications
-- [ ] **Error responses** use standard format
-- [ ] Content negotiation via **Accept headers**
+### URLs and Resources
+- [ ] URLs use **nouns (not verbs)**
+- [ ] Resources in **plural** everywhere
+- [ ] **spinal-case** for multi-word URLs
+- [ ] **snake_case** OR **camelCase** consistent for attributes
+- [ ] **Versioning** in URL (`/v1/`)
+- [ ] Maximum hierarchy of **2 levels**
+- [ ] **Medium-grained** resources (neither too fine nor too coarse)
+
+### HTTP Methods
+- [ ] **GET** for reading (safe, idempotent, cacheable)
+- [ ] **POST** for creation (non-idempotent)
+- [ ] **PUT** for complete replacement (idempotent)
+- [ ] **PATCH** for partial update
+- [ ] **DELETE** for deletion (idempotent)
+- [ ] No POST/PUT/DELETE on inappropriate collections
+
+### Status Codes
+- [ ] **200** for GET/PUT/PATCH success
+- [ ] **201** for POST creation + `Location` header
+- [ ] **204** for DELETE success
+- [ ] **206** for pagination
+- [ ] **400** for validation errors
+- [ ] **401** for missing authentication
+- [ ] **403** for insufficient permissions
+- [ ] **404** for non-existent resource
+- [ ] **500** for server errors (without technical details)
+
+### Pagination
+- [ ] **Mandatory** on all collections
+- [ ] Format `?range=0-24`
+- [ ] **Content-Range** header
+- [ ] **Accept-Range** header
+- [ ] **Link** header with first, next, prev, last
+- [ ] Status **206 Partial Content**
+
+### Filtering and Search
+- [ ] Filtering via query params (`?state=paid`)
+- [ ] Sorting via `?sort=` and `?desc=`
+- [ ] Partial responses via `?fields=`
+- [ ] `/search` endpoints for complex search
+- [ ] `/count`, `/first`, `/last` endpoints for utility
 
 ### Security
-- [ ] **HTTPS only** (no HTTP endpoints)
-- [ ] **OAuth2** implemented correctly
-- [ ] **Rate limiting** configured
-- [ ] **CORS** configured for browser clients
-- [ ] Security headers included
+- [ ] **HTTPS** mandatory everywhere
+- [ ] **OAuth 2.0** for authorization
+- [ ] **OpenID Connect** for authentication
+- [ ] Tokens in **Authorization: Bearer** header
+- [ ] **Rate limiting** implemented
+- [ ] Rate limit headers exposed
+- [ ] **CORS** properly configured
+- [ ] Input validation and sanitization
+- [ ] No sensitive data in URLs
 
-### Performance & Scalability
-- [ ] **Pagination mandatory** for collections
-- [ ] **Default pagination** configured (e.g., 25 items)
-- [ ] **Field selection** supported for large resources
-- [ ] **Caching headers** (ETag, Cache-Control)
-- [ ] **Compression** enabled (gzip)
+### Content Negotiation
+- [ ] **Accept** header for format (JSON by default)
+- [ ] **Accept-Language** header for i18n
+- [ ] Dates in **ISO 8601**
+- [ ] Currencies in **ISO 4217**
+- [ ] **Content-Type** header in responses
 
-### Developer Experience
-- [ ] **Documentation** complete with examples
--
+### Errors
+- [ ] Standardized JSON format for all errors
+- [ ] Fields `error` and `error_description`
+- [ ] No exposed stack traces
+- [ ] Clear and actionable error messages
+- [ ] Server logging with incident IDs
+
+### HATEOAS
+- [ ] **Link** header with relations
+- [ ] Links `self`, `next`, `prev` at minimum
+- [ ] Documentation of available relations
+
+### Documentation
+- [ ] **OpenAPI 3.x** specification
+- [ ] Copy/pasteable **cURL** examples
+- [ ] Quick start guide
+- [ ] Exhaustive list of error codes
+- [ ] Request/response examples for each endpoint
+- [ ] OAuth authentication documentation
+- [ ] Version changelog
+
+### Performance
+- [ ] Partial responses available (`?fields=`)
+- [ ] Pagination with reasonable default size
+- [ ] Compression (gzip/brotli) enabled
+- [ ] ETags for caching
+- [ ] Appropriate cache headers
+
+### Monitoring
+- [ ] Structured logs (JSON)
+- [ ] Metrics (latency, error rate, throughput)
+- [ ] Alerts on 5xx errors
+- [ ] Tracking of used versions
+- [ ] Usage analytics
+
+---
+
+## 🎓 Advanced Principles
+
+### Async Operations
+
+For long-running operations, use the asynchronous pattern:
+
+```http
+# 1. Create the job
+POST /v1/reports/generate
+
+→ 202 Accepted
+Location: https://api.example.com/v1/jobs/abc123
+{
+  "job_id": "abc123",
+  "status": "pending",
+  "created_at": "2025-01-15T10:30:00Z"
+}
+
+# 2. Check status
+GET /v1/jobs/abc123
+
+→ 200 OK
+{
+  "job_id": "abc123",
+  "status": "processing",
+  "progress": 45,
+  "estimated_completion": "2025-01-15T10:32:00Z"
+}
+
+# 3. Retrieve result
+GET /v1/jobs/abc123
+
+→ 200 OK
+{
+  "job_id": "abc123",
+  "status": "completed",
+  "result": {
+    "report_url": "https://api.example.com/v1/reports/xyz789"
+  }
+}
+```
+
+### Webhooks
+
+Allow clients to subscribe to events:
+
+```http
+# Webhook configuration
+POST /v1/webhooks
+{
+  "url": "https://client.example.com/webhook",
+  "events": ["order.created", "order.paid"],
+  "secret": "whsec_abc123"
+}
+
+# Notification sent
+POST https://client.example.com/webhook
+X-Webhook-Signature: sha256=...
+{
+  "event": "order.created",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "data": {
+    "id": "1234",
+    "state": "running"
+  }
+}
+```
+
+### GraphQL Consideration
+
+**When to consider GraphQL instead of REST**:
+- Need for very flexible queries
+- Over-fetching/under-fetching problematic
+- Complex relationships between entities
+- Mobile client requiring extreme optimization
+
+**But REST remains preferable for**:
+- Simple public APIs
+- Native HTTP caching important
+- Less experienced team
+- Maximum compatibility
+
+### API Maturity Model (Richardson Maturity Model)
+
+**Level 0**: Single endpoint, no HTTP verbs (SOAP-like)
+**Level 1**: Multiple endpoints with resources
+**Level 2**: HTTP verbs + appropriate status codes
+**Level 3**: Complete HATEOAS
+
+**Target**: Minimum level 2, level 3 if discoverability critical.
+
+---
+
+## 📖 References and Standards
+
+### HTTP Specifications
+- RFC 2616: HTTP/1.1
+- RFC 7231: HTTP Semantics and Content
+- RFC 7232: Conditional Requests
+- RFC 7233: Range Requests
+- RFC 7235: Authentication
+
+### REST and Hypermedia
+- Roy Fielding: REST Dissertation (2000)
+- RFC 5988: Web Linking
+- HAL (Hypertext Application Language)
+- JSON-LD
+
+### Security
+- RFC 6749: OAuth 2.0
+- RFC 6750: OAuth 2.0 Bearer Token
+- RFC 7519: JSON Web Token (JWT)
+- OpenID Connect Core 1.0
+
+### Formats
+- RFC 8259: JSON
+- ISO 8601: Date and Time
+- ISO 4217: Currency Codes
+- RFC 5646: Language Tags
+
+### Additional Resources
+- Richardson Maturity Model
+- Martin Fowler - REST
+- API Design Patterns (Google, Microsoft, AWS)
+
+---
+
+## 🎯 In Summary: The 10 Commandments of RESTful API
+
+1. **HTTPS and OAuth2** you shall use, security you shall not neglect
+2. **Plural nouns** for your resources you shall choose, verbs you shall ban
+3. **Versioning** in the URL you shall place, two versions maximum you shall maintain
+4. **HTTP verbs and status codes** correctly you shall employ, their semantics you shall respect
+5. **Mandatory pagination** you shall implement, Link headers you shall not forget
+6. **Structured errors** you shall return, technical details you shall hide
+7. **Absolute consistency** you shall maintain, a single naming style you shall adopt
+8. **Exhaustive documentation** you shall provide, cURL examples you shall include
+9. **Medium-grained resources** you shall create, two levels maximum you shall nest
+10. **For the developer** you shall design, user experience you shall prioritize
+
+---
+
+**Version**: 1.0
+**Date**: 2025-11-13
+**Author**: Based on OCTO Technology REST API Design Reference Card and industry best practices
+**License**: Free use for internal and external projects
+
+---
+
+*This document should be used as a complete reference for all REST API design. It represents a balance between REST purism and development pragmatism. Adapt these guidelines according to your specific constraints, but remain consistent once choices are made.*
+
