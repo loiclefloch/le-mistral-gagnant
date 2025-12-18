@@ -4,7 +4,10 @@
   "main": "src/infrastructure/server.ts",
   "scripts": {
     "start": "ts-node src/infrastructure/server.ts",
-    "test": "jest"
+    "test": "jest",
+    "lint:api": "node ../linter/api_guidelines_linter.js ./src",
+    "lint:api:full": "node ../linter/api_guidelines_linter.js .",
+    "lint:api:infrastructure": "node ../linter/api_guidelines_linter.js ./src/infrastructure"
   },
   "dependencies": {
     "@types/supertest": "^6.0.3",
