@@ -40,3 +40,53 @@ node ../linter/api_guidelines_linter.js ./src/infrastructure/express-server.ts
 ```
 ## Purpose
 Use this project to see how the linter detects violations of the API guidelines.
+
+## 📊 Audit Dashboard (Docusaurus)
+
+The project includes an interactive audit dashboard built with Docusaurus that visualizes API audit reports and improvement recommendations.
+
+### Prerequisites
+- Node.js 16+ installed
+- npm or yarn package manager
+
+### Installation
+
+Navigate to the audit dashboard directory:
+```bash
+cd audit-dashboard
+npm install
+```
+
+### Running the Dashboard
+
+**Development Mode** (with hot reload):
+```bash
+npm run start
+```
+The dashboard will be available at `http://localhost:3000/`
+
+**Production Build**:
+```bash
+npm run build
+```
+
+This generates optimized static files in the `build/` directory.
+
+**Serve Production Build**:
+```bash
+npm run serve
+```
+
+### Dashboard Features
+- 📈 **Detailed Scoring**: API audit scores by domain
+- 🔴 **Critical Issues**: Top problems and severity levels
+- 🚀 **Action Plan**: Prioritized improvements with timeline
+- 📊 **Graphs & Charts**: Visual representation of audit results
+- ⏱️ **Timeline**: Implementation schedule for fixes
+
+### Structure
+The audit dashboard content is located in:
+- `audit-dashboard/docs/audit/` - Audit report content
+- `audit-dashboard/docs/` - Documentation pages
+- `audit-dashboard/sidebars.ts` - Navigation configuration
+

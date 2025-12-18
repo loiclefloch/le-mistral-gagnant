@@ -17,3 +17,6 @@ This repository provides guidelines and tools for API development, including doc
 
 ## Usage
 Refer to the documentation files for API standards. Use the linter script in the `linter/` directory to check your API code for compliance.
+
+For information about the **Audit Dashboard** (Docusaurus), please refer to the [project-typescript README](./examples/project-typescript/README.md#-audit-dashboard-docusaurus).
+
