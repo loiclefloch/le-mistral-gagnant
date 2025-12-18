@@ -1,63 +1,50 @@
 
 const request = require('supertest');
-const { UserService } = require('../src/application/UserService');
-const express = require('express');
+const { app } = require('../src/infrastructure/server');
 
-function createTestApp() {
-  const app = express();
-  app.use(express.json());
-  const userService = new UserService();
-  app.post('/addUser', (req, res) => {
-    const user = userService.createUser(req.body);
-    res.send(user);
-  });
-  app.get('/getUser/:id', (req, res) => {
-    const user = userService.getUser(req.params.id);
-    res.send(user);
-  });
-  app.get('/allUsers', (req, res) => {
-    const users = userService.listUsers();
-    res.send(users);
-  });
-  app.delete('/removeUser/:id', (req, res) => {
-    // Access private users array for test purposes
-    const users = (userService as any).users;
-    const idx = users.findIndex((u: any) => u.id === req.params.id);
-    if (idx !== -1) users.splice(idx, 1);
-    res.send({ removed: idx !== -1 });
-  });
-  return { app, userService };
-}
-
-describe('Bad API Endpoints', () => {
-  let app;
-  let userService;
-  beforeEach(() => {
-    const testSetup = createTestApp();
-    app = testSetup.app;
-    userService = testSetup.userService;
-  });
-
+describe('Bad API Endpoints (integration with project app)', () => {
   it('should add a user', async () => {
-    const res = await request(app).post('/addUser').send({ name: 'Test', email: 'test@example.com' });
+    const res = await request(app)
+      .post('/addUser')
+      .send({ name: 'Test', email: 'test@example.com' });
+
+    expect(res.status).toBe(200);
     expect(res.body.name).toBe('Test');
+    expect(res.body.email).toBe('test@example.com');
   });
 
   it('should get a user', async () => {
-    const user = userService.createUser({ name: 'Test2', email: 'test2@example.com' });
-    const res = await request(app).get(`/getUser/${user.id}`);
+    const created = await request(app)
+      .post('/addUser')
+      .send({ name: 'Test2', email: 'test2@example.com' });
+
+    const id = created.body.id;
+
+    const res = await request(app).get(`/getUser/${id}`);
+    expect(res.status).toBe(200);
     expect(res.body.email).toBe('test2@example.com');
   });
 
   it('should list users', async () => {
-    userService.createUser({ name: 'Test3', email: 'test3@example.com' });
+    await request(app)
+      .post('/addUser')
+      .send({ name: 'Test3', email: 'test3@example.com' });
+
     const res = await request(app).get('/allUsers');
+    expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
   });
 
   it('should remove a user', async () => {
-    const user = userService.createUser({ name: 'Test4', email: 'test4@example.com' });
-    const res = await request(app).delete(`/removeUser/${user.id}`);
+    const created = await request(app)
+      .post('/addUser')
+      .send({ name: 'Test4', email: 'test4@example.com' });
+
+    const id = created.body.id;
+
+    const res = await request(app).delete(`/removeUser/${id}`);
+    expect(res.status).toBe(200);
     expect(res.body.removed).toBe(true);
   });
 });

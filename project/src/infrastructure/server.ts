@@ -1,7 +1,7 @@
 import express from 'express';
 import { UserService } from '../application/UserService';
 
-const app = express();
+export const app = express();
 app.use(express.json());
 const userService = new UserService();
 
@@ -29,6 +29,13 @@ app.delete('/removeUser/:id', (req, res) => {
   res.send({ removed: idx !== -1 });
 });
 
-app.listen(3000, () => {
-  console.log('Bad API demo listening on port 3000');
-});
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+
+// Ne lance le serveur que si le fichier est exécuté directement et pas en environnement de test
+if (typeof require !== 'undefined' && require.main === module && process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Bad API demo listening on port ${PORT}`);
+  });
+}
+
+export default app;
