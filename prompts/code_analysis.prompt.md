@@ -59,6 +59,7 @@ Pour **chaque catégorie** des guidelines, fournis :
 [Explication détaillée avec arguments concrets]
 
 **Observations détaillées** :
+[Observations faites pour cette partie]
 
 **Points forts** ✅ :
 - [Point fort 1] - [`fichier.ext`](chemin/vers/fichier.ext)
@@ -67,11 +68,6 @@ Pour **chaque catégorie** des guidelines, fournis :
 **Points faibles** ❌ :
 - [Point faible 1] - [`fichier-probleme.ext`](chemin/vers/fichier-probleme.ext)
 - [Point faible 2]
-
-**Fichiers analysés** :
-- [`fichier1.ext`](chemin/fichier1.ext)
-- [`fichier2.ext`](chemin/fichier2.ext)
-- [`fichier3.ext`](chemin/fichier3.ext)
 
 **Exemples de code** :
 
@@ -182,21 +178,21 @@ Pour **chaque catégorie** des guidelines, fournis :
 
 ### Calcul Détaillé
 
-| Catégorie              | Score | Poids | Points  | Fichiers Principaux           |
-|------------------------|-------|-------|---------|-------------------------------|
-| Security               | X/10  | 15%   | X.XX    | [`auth.ts`](src/auth.ts)      |
-| Error Handling         | X/10  | 10%   | X.XX    | [`errors.ts`](src/errors.ts)  |
-| API Versioning         | X/10  | 15%   | X.XX    | [`routes.ts`](src/routes.ts)  |
-| URL Structure          | X/10  | 10%   | X.XX    | [`routes.ts`](src/routes.ts)  |
-| HTTP Methods           | X/10  | 10%   | X.XX    | [`handlers.ts`](src/handlers) |
-| Status Codes           | X/10  | 8%    | X.XX    | [`responses.ts`](src/...)     |
-| Pagination             | X/10  | 10%   | X.XX    | [`pagination.ts`](src/...)    |
-| HATEOAS                | X/10  | 5%    | X.XX    | N/A                           |
-| Documentation          | X/10  | 5%    | X.XX    | [`README.md`](README.md)      |
-| Query Parameters       | X/10  | 5%    | X.XX    | [`query.ts`](src/query.ts)    |
-| Content Negotiation    | X/10  | 5%    | X.XX    | [`middleware.ts`](src/...)    |
-| Infrastructure         | X/10  | 2%    | X.XX    | [`.env`](.env), Docker        |
-| **TOTAL**              |       |       | **XX/100** |                           |
+| Catégorie              | Score | Poids | Points  |
+|------------------------|-------|-------|---------|
+| Security               | X/10  | 15%   | X.XX    |
+| Error Handling         | X/10  | 10%   | X.XX    |
+| API Versioning         | X/10  | 15%   | X.XX    |
+| URL Structure          | X/10  | 10%   | X.XX    |
+| HTTP Methods           | X/10  | 10%   | X.XX    |
+| Status Codes           | X/10  | 8%    | X.XX    |
+| Pagination             | X/10  | 10%   | X.XX    |
+| HATEOAS                | X/10  | 5%    | X.XX    |
+| Documentation          | X/10  | 5%    | X.XX    |
+| Query Parameters       | X/10  | 5%    | X.XX    |
+| Content Negotiation    | X/10  | 5%    | X.XX    |
+| Infrastructure         | X/10  | 2%    | X.XX    |
+| **TOTAL**              |       |       | **XX/100** |
 
 ### Niveau Atteint
 
@@ -253,7 +249,6 @@ Pour chaque action, fournis :
 **Catégorie impactée** : [Security / Error Handling / ...]
 **Gain estimé** : +X points
 **Difficulté** : 🟢 Facile / 🟡 Moyenne / 🔴 Difficile
-**Effort estimé** : X heures / X jours
 **Priorité** : 🔴 Critique
 
 **Description du problème** :
@@ -342,11 +337,11 @@ app.get('/users/:id', async (req, res) => {
 
 Actions à impact maximum avec effort minimum :
 
-| Action                          | Gain | Effort   | Difficulté | Fichiers                    |
-|---------------------------------|------|----------|------------|-----------------------------|
-| [Action 1]                      | +X   | 2h       | 🟢         | [`file.ts`](path/file.ts)   |
-| [Action 2]                      | +X   | 4h       | 🟢         | [`file.ts`](path/file.ts)   |
-| [Action 3]                      | +X   | 1 jour   | 🟡         | [`file.ts`](path/file.ts)   |
+| Action                          | Gain | Difficulté | Fichiers                    |
+|---------------------------------|------|------------|-----------------------------|
+| [Action 1]                      | +X   | 🟢         | [`file.ts`](path/file.ts)   |
+| [Action 2]                      | +X   | 🟢         | [`file.ts`](path/file.ts)   |
+| [Action 3]                      | +X   | 🟡         | [`file.ts`](path/file.ts)   |
 
 **Recommandation** : Commencer par ces actions pour un boost rapide du score.
 ```
@@ -433,21 +428,21 @@ Actions à impact maximum avec effort minimum :
 
 ### Répartition par Catégorie
 
-| Catégorie           | Score  | État    |
-|---------------------|--------|---------|
-| Security            | X/10   | 🟢/🟡/🔴 |
-| Error Handling      | X/10   | 🟢/🟡/🔴 |
-| API Versioning      | X/10   | 🟢/🟡/🔴 |
-| URL Structure       | X/10   | 🟢/🟡/🔴 |
-| HTTP Methods        | X/10   | 🟢/🟡/🔴 |
-| Status Codes        | X/10   | 🟢/🟡/🔴 |
-| Pagination          | X/10   | 🟢/🟡/🔴 |
-| HATEOAS             | X/10   | 🟢/🟡/🔴 |
-| Documentation       | X/10   | 🟢/🟡/🔴 |
-| Query Parameters    | X/10   | 🟢/🟡/🔴 |
-| Content Negotiation | X/10   | 🟢/🟡/🔴 |
-| Infrastructure      | X/10   | 🟢/🟡/🔴 |
-
+| Catégorie           | Score | Poids | Points       | État    |
+|---------------------|-------|-------|--------------|---------|
+| Security            | 1/10  | 15%   | 0.15         | 🟢/🟡/🔴 |
+| Error Handling      | 2/10  | 10%   | 0.20         | 🟢/🟡/🔴 |
+| API Versioning      | 3/10  | 15%   | 0.45         | 🟢/🟡/🔴 |
+| URL Structure       | 4/10  | 10%   | 0.40         | 🟢/🟡/🔴 |
+| HTTP Methods        | 3/10  | 10%   | 0.30         | 🟢/🟡/🔴 |
+| Status Codes        | 2/10  | 8%    | 0.16         | 🟢/🟡/🔴 |
+| Pagination          | 1/10  | 10%   | 0.10         | 🟢/🟡/🔴 |
+| HATEOAS             | 0/10  | 5%    | 0.00         | 🟢/🟡/🔴 |
+| Documentation       | 4/10  | 5%    | 0.20         | 🟢/🟡/🔴 |
+| Query Parameters    | 3/10  | 5%    | 0.15         | 🟢/🟡/🔴 |
+| Content Negotiation | 7/10  | 5%    | 0.35         | 🟢/🟡/🔴 |
+| Infrastructure      | 4/10  | 2%    | 0.08         | 🟢/🟡/🔴 |
+| **TOTAL**           |       |       | **25.4/100** | [ETAT MOYEN: 🟢/🟡/🔴] |
 ---
 
 ## 🎯 Top 3 Points Forts
@@ -458,45 +453,26 @@ Actions à impact maximum avec effort minimum :
 
 ---
 
-## ⚠️ Top 3 Points d'Amélioration Urgents
-
-1. **[Catégorie]** : [Brève description du problème]
-   - **Impact** : [Critique/Haut/Moyen/Bas]
-   - **Fichiers** : [`fichier1.ts`](path/fichier1.ts), [`fichier2.ts`](path/fichier2.ts)
-   - **Action** : [Lien vers action dans le plan](#action-1-dans-improvement-plan)
-
-2. **[Catégorie]** : [Brève description du problème]
-   - **Impact** : [Critique/Haut/Moyen/Bas]
-   - **Fichiers** : [`fichier.ts`](path/fichier.ts)
-   - **Action** : [Lien vers action](#action-2)
-
-3. **[Catégorie]** : [Brève description du problème]
-   - **Impact** : [Critique/Haut/Moyen/Bas]
-   - **Fichiers** : [`fichier.ts`](path/fichier.ts)
-   - **Action** : [Lien vers action](#action-3)
-
----
-
 ## 🚀 Quick Wins (À Faire en Premier)
 
 Actions à impact maximum avec effort minimum :
 
-- [ ] **[Action 1]** - [`fichier.ts`](path/fichier.ts) - **+X pts** - 🟢 Facile (2h)
-- [ ] **[Action 2]** - [`fichier.ts`](path/fichier.ts) - **+X pts** - 🟡 Moyenne (4h)
-- [ ] **[Action 3]** - [`fichier.ts`](path/fichier.ts) - **+X pts** - 🟢 Facile (1h)
+- [ ] **[Action 1]** - **+X pts** - 🟢 Facile
+- [ ] **[Action 2]** - **+X pts** - 🟡 Moyenne
+- [ ] **[Action 3]** - **+X pts** - 🟢 Facile
 
-**Gain total estimé** : +XX points en ~XX heures
+**Gain total estimé** : +XX points
 
 ---
 
 ## 📈 Évolution Possible du Score
 
-| Phase              | Score Actuel | Score Cible | Effort     | Délai      |
-|--------------------|--------------|-------------|------------|------------|
-| **Maintenant**     | XX/100       | -           | -          | -          |
-| **Phase 1 (Fondations)**  | -    | XX/100      | X jours    | 1-2 semaines |
-| **Phase 2 (Production)**  | -    | XX/100      | X jours    | 3-4 semaines |
-| **Phase 3 (Excellence)**  | -    | XX/100      | X jours    | 2-3 mois   |
+| Phase              | Score Actuel | Score Cible |
+|--------------------|--------------|-------------|
+| **Maintenant**     | XX/100       | -           |
+| **Phase 1 (Fondations)**  | -    | XX/100      |
+| **Phase 2 (Production)**  | -    | XX/100      |
+| **Phase 3 (Excellence)**  | -    | XX/100      | 
 
 ---
 
@@ -504,13 +480,12 @@ Actions à impact maximum avec effort minimum :
 
 - 📊 [**Rapport d'Analyse Complet**](api-analysis-report.md) - Analyse catégorie par catégorie avec scores et observations
 - 📋 [**Plan d'Action Détaillé**](improvement-action-plan.md) - Actions concrètes avec priorités et exemples de code
-- 📖 [**Guidelines Utilisées**](../api_guidelines_v2.md) - Document de référence (v2.0 Pragmatic Edition)
 
 ---
 
 ## 🔍 Méthodologie
 
-Cette analyse a été réalisée selon les **API Guidelines v2.0 Pragmatic Edition**, qui évaluent :
+Cette analyse a été réalisée selon les **API Guidelines**, qui évaluent :
 
 - ✅ 12 catégories (Security, Error Handling, Versioning, etc.)
 - ✅ Scoring pondéré sur 100 points
@@ -522,26 +497,23 @@ Cette analyse a été réalisée selon les **API Guidelines v2.0 Pragmatic Editi
 
 ## 📞 Prochaines Étapes Recommandées
 
-1. **Immédiat** (< 1 semaine) :
+1. **Immédiat** :
    - Traiter les actions 🔴 **CRITIQUES**
    - Implémenter les Quick Wins
 
-2. **Court terme** (1-4 semaines) :
+2. **Court terme** :
    - Traiter les actions 🟠 **HAUTE PRIORITÉ**
    - Commencer Phase 1 de la roadmap
 
-3. **Moyen terme** (1-3 mois) :
+3. **Moyen terme** :
    - Actions 🟡 **PRIORITÉ MOYENNE**
    - Phases 2 et 3 de la roadmap
 
-4. **Long terme** (3+ mois) :
+4. **Long terme** :
    - Actions 🟢 **BASSE PRIORITÉ**
    - Optimisations et perfectionnement
 
 ---
-
-*Analyse générée le [DATE] par [IA/Nom]*
-*Basée sur API Guidelines v2.0 Pragmatic Edition*
 ```
 
 ---
@@ -622,12 +594,19 @@ Cette analyse a été réalisée selon les **API Guidelines v2.0 Pragmatic Editi
 - ✅ Explications **claires et pédagogiques**
 - ✅ **Positif et constructif** (pas seulement critique)
 - ✅ **Factuel** : base sur des observations concrètes du code
+- ✅ **Synthétique** : aller droit au but
 
 ---
 
 ## Exemple de Début d'Exécution
 
 Une fois ce prompt fourni, l'IA devrait commencer ainsi :
+
+[✓] Explorer le projet et comprendre la structure de l'API
+[✓] Analyser chaque catégorie selon les guidelines pragmatiques
+[✓] Calculer les scores et générer le rapport d'analyse détaillé
+[✓] Créer le plan d'action d'amélioration avec actions prioritaires
+[✓] Générer la synthèse exécutive README.md
 
 ```markdown
 # Démarrage de l'analyse...
@@ -646,11 +625,20 @@ Une fois ce prompt fourni, l'IA devrait commencer ainsi :
 
 [L'IA analyse chaque catégorie des guidelines]
 
-## Étape 4 : Génération des rapports
+## Étape 4: Calculer les scores et générer le rapport d'analyse détaillé
 
 Création de :
 - `mistral/analysis/api-analysis-report.md`
+
+## Étape 5: Créer le plan d'action d'amélioration avec actions prioritaires
+
+Création de :
 - `mistral/analysis/improvement-action-plan.md`
+ 
+
+## Étape 6 : Générer la synthèse exécutive README.md
+
+Création de :
 - `mistral/analysis/README.md`
 
 [Contenu généré selon les structures ci-dessus]
