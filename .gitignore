@@ -1,0 +1,6 @@
+.DS_Store
+.idea
+# Ignore node_modules in the project subfolder
+examples/project/node_modules/
+examples/project/**/node_modules/
+documents/
